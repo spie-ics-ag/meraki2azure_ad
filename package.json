@@ -9,8 +9,6 @@
     "body-parser": "^1.20.2",
     "bunyan": "*",
     "cookie-parser": "^1.4.6",
-    "ejs": "^3.1.9",
-    "ejs-locals": "^1.0.2",
     "express": "^4.18.2",
     "express-session": "^1.17.1",
     "method-override": "^3.0.0",
@@ -19,5 +17,8 @@
     "passport": "*",
     "passport-azure-ad": "^4.3.5",
     "url": "^0.11.1"
-  }
+  },
+  "devDependencies": {
+  "ejs": ">=3.1.9"
+}
 }

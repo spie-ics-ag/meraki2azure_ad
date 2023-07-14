@@ -34,7 +34,7 @@ exports.creds = {
   // Required to set to false if you don't want to validate issuer
   validateIssuer: true,
   //validateIssuer: false,
-  
+
   // Required to set to true if you are using B2C endpoint
   // This sample is for v1 endpoint only, so we set it to false
   isB2C: false,
@@ -53,7 +53,7 @@ exports.creds = {
   // Required if `useCookieInsteadOfSession` is set to true. You can provide multiple set of key/iv pairs for key
   // rollover purpose. We always use the first set of key/iv pair to encrypt cookie, but we will try every set of
   // key/iv pair to decrypt cookie. Key can be any string of length 32, and iv can be any string of length 12.
-  cookieEncryptionKeys: [ 
+  cookieEncryptionKeys: [
     { 'key': '12345678901234567890123456789012', 'iv': '123456789012' },
     { 'key': 'abcdefghijklmnopqrstuvwxyzabcdef', 'iv': 'abcdefghijkl' }
   ],

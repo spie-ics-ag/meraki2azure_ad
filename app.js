@@ -28,7 +28,6 @@
  *****************************************************************************/
 
 var express = require('express');
-//var router = express.Router();
 var logger = require('morgan');
 var serveStatic = require('serve-static')
 var cookieParser = require('cookie-parser');
@@ -36,7 +35,7 @@ var expressSession = require('express-session');
 var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
 var passport = require('passport');
-var util = require('util');
+//var util = require('util');
 var bunyan = require('bunyan');
 var config = require('./config');
 
@@ -49,7 +48,7 @@ var config = require('./config');
 var OIDCStrategy = require('passport-azure-ad').OIDCStrategy;
 
 var log = bunyan.createLogger({
-    name: 'Meraki Azure AD Integration'
+  name: 'Meraki Azure AD Integration'
 });
 
 /******************************************************************************
@@ -62,11 +61,11 @@ var log = bunyan.createLogger({
 // this will be as simple as storing the user ID when serializing, and finding
 // the user by ID when deserializing.
 //-----------------------------------------------------------------------------
-passport.serializeUser(function(user, done) {
+passport.serializeUser(function (user, done) {
   done(null, user.oid);
 });
 
-passport.deserializeUser(function(oid, done) {
+passport.deserializeUser(function (oid, done) {
   findByOid(oid, function (err, user) {
     done(err, user);
   });
@@ -79,10 +78,10 @@ var base_grant_url = ""
 var user_continue_url = ""
 
 
-var findByOid = function(oid, fn) {
+var findByOid = function (oid, fn) {
   for (var i = 0, len = users.length; i < len; i++) {
     var user = users[i];
-   log.info('we are using user: ', user);
+    log.info('we are using user: ', user);
     if (user.oid === oid) {
       return fn(null, user);
     }
@@ -108,32 +107,32 @@ var findByOid = function(oid, fn) {
 // To do prototype (6), passReqToCallback must be set to true in the config.
 //-----------------------------------------------------------------------------
 passport.use(new OIDCStrategy({
-    identityMetadata: config.creds.identityMetadata,
-    clientID: config.creds.clientID,
-    responseType: config.creds.responseType,
-    responseMode: config.creds.responseMode,
-    redirectUrl: config.creds.redirectUrl,
-    allowHttpForRedirectUrl: config.creds.allowHttpForRedirectUrl,
-    clientSecret: config.creds.clientSecret,
-    validateIssuer: config.creds.validateIssuer,
-    isB2C: config.creds.isB2C,
-    issuer: config.creds.issuer,
-    passReqToCallback: config.creds.passReqToCallback,
-    scope: config.creds.scope,
-    loggingLevel: config.creds.loggingLevel,
-    nonceLifetime: config.creds.nonceLifetime,
-    nonceMaxAmount: config.creds.nonceMaxAmount,
-    useCookieInsteadOfSession: config.creds.useCookieInsteadOfSession,
-    cookieEncryptionKeys: config.creds.cookieEncryptionKeys,
-    clockSkew: config.creds.clockSkew,
-  },
-  function(iss, sub, profile, accessToken, refreshToken, done) {
+  identityMetadata: config.creds.identityMetadata,
+  clientID: config.creds.clientID,
+  responseType: config.creds.responseType,
+  responseMode: config.creds.responseMode,
+  redirectUrl: config.creds.redirectUrl,
+  allowHttpForRedirectUrl: config.creds.allowHttpForRedirectUrl,
+  clientSecret: config.creds.clientSecret,
+  validateIssuer: config.creds.validateIssuer,
+  isB2C: config.creds.isB2C,
+  issuer: config.creds.issuer,
+  passReqToCallback: config.creds.passReqToCallback,
+  scope: config.creds.scope,
+  loggingLevel: config.creds.loggingLevel,
+  nonceLifetime: config.creds.nonceLifetime,
+  nonceMaxAmount: config.creds.nonceMaxAmount,
+  useCookieInsteadOfSession: config.creds.useCookieInsteadOfSession,
+  cookieEncryptionKeys: config.creds.cookieEncryptionKeys,
+  clockSkew: config.creds.clockSkew,
+},
+  function (iss, sub, profile, accessToken, refreshToken, done) {
     if (!profile.oid) {
       return done(new Error("No oid found"), null);
     }
     // asynchronous verification, for effect...
     process.nextTick(function () {
-      findByOid(profile.oid, function(err, user) {
+      findByOid(profile.oid, function (err, user) {
         if (err) {
           return done(err);
         }
@@ -156,7 +155,6 @@ var app = express();
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
-//app.use(express.logger());
 app.use(logger('combined'));
 app.use(methodOverride());
 app.use(cookieParser());
@@ -176,13 +174,12 @@ if (config.useMongoDBSessionStore) {
   app.use(expressSession({ secret: 'keyboard cat', resave: true, saveUninitialized: false }));
 }
 
-app.use(bodyParser.urlencoded({ extended : true }));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // Initialize Passport!  Also use passport.session() middleware, to support
 // persistent login sessions (recommended).
 app.use(passport.initialize());
 app.use(passport.session());
-//app.use(app.router);
 //app.use(express.static(__dirname + '/../../public'));
 //app.use(serveStatic(__dirname + '/../../public'));
 
@@ -202,18 +199,13 @@ function ensureAuthenticated(req, res, next) {
   res.redirect('/login');
 };
 
-// middleware specific to this router
-/*router.use((req, res, next) => {
-  console.log('Time: ', Date.now())
-  next()
-});*/
-
 log.info("Azure Identity: " + config.creds.identityMetadata)
 log.info("Azure Client ID: " + config.creds.clientID);
-log.info("Azure Client Secret: " + config.creds.clientSecret);
-log.info("Redirect URL: " + config.creds. redirectUrl);
+//log.info("Azure Client Secret: " + config.creds.clientSecret);
+log.info("Redirect URL: " + config.creds.redirectUrl);
+log.info("Destroy URL: " + config.destroySessionUrl);
 
-app.get('/', function(req, res) {
+app.get('/', function (req, res) {
   //log.info(req)
   var url = require('url');
   var url_parts = url.parse(req.url, true);
@@ -225,12 +217,12 @@ app.get('/', function(req, res) {
 
 
 // '/account' is only available to logged in user
-app.get('/account', ensureAuthenticated, function(req, res) {
+app.get('/account', ensureAuthenticated, function (req, res) {
   res.render('account', { user: req.user });
 });
 
 app.get('/login',
-  function(req, res, next) {
+  function (req, res, next) {
     var url = require('url');
     var url_parts = url.parse(req.url, true);
     var query = url_parts.query;
@@ -246,16 +238,16 @@ app.get('/login',
       }
     )(req, res, next);
   },
-  function(req, res) {
+  function (req, res) {
     res.redirect('/');
-});
+  });
 
 // 'GET returnURL'
 // `passport.authenticate` will try to authenticate the content returned in
 // query (such as authorization code). If authentication fails, user will be
 // redirected to '/' (home page); otherwise, it passes to the next middleware.
 app.get('/auth/openid/return',
-  function(req, res, next) {
+  function (req, res, next) {
     passport.authenticate('azuread-openidconnect',
       {
         response: res,                      // required
@@ -263,7 +255,7 @@ app.get('/auth/openid/return',
       }
     )(req, res, next);
   },
-  function(req, res) {
+  function (req, res) {
     log.info('We received a return from AzureAD.');
     res.redirect('/');
   });
@@ -273,7 +265,7 @@ app.get('/auth/openid/return',
 // body (such as authorization code). If authentication fails, user will be
 // redirected to '/' (home page); otherwise, it passes to the next middleware.
 app.post('/auth/openid/return',
-  function(req, res, next) {
+  function (req, res, next) {
     passport.authenticate('azuread-openidconnect',
       {
         response: res,                      // required
@@ -281,16 +273,19 @@ app.post('/auth/openid/return',
       }
     )(req, res, next);
   },
-  function(req, res) {
+  function (req, res) {
     res.redirect(base_grant_url);
   });
 
 // 'logout' route, logout from passport, and destroy the session with AAD.
-app.get('/logout', function(req, res){
-  req.session.destroy(function(err) {
-    req.logOut();
-    res.redirect(config.destroySessionUrl);
+app.get('/logout', function (req, res, next) {
+  req.logout(function (err) {
+    req.session.destroy(function (err) {
+      if (err) { return next(err); }
+      res.redirect(config.destroySessionUrl);
+    });
   });
 });
+
 var port_number = app.listen(process.env.PORT || 3000);
 app.listen(port_number);

@@ -1,6 +1,8 @@
 # IMPORTANT NOTES
 This repo is a fork of [Rafael Carvalho's meraki-azure-ad](https://github.com/rafael-carvalho/meraki-azure-ad). As it was no longer updated nor maintained, we updated the code to use the latest npm versions.
 
+The application uses [passport-azure-ad](https://github.com/AzureAD/passport-azure-ad), which is deprecated. It has to be rewritten using [MSAL.js](https://github.com/AzureAD/microsoft-authentication-library-for-js)
+
 # Meraki Captive Portal with Azure Active Directory 
 This Node.js app was created to facilitate the authorization of users registered on an Azure Active Directory with Meraki wireless infrastructures. Instead of using a RADIUS server for the authentication, you can spin up a web server that will be serving as your Captive Portal, which will then authenticate the user using OAuth
 
