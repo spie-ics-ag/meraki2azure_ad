@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+	<link rel="stylesheet" type="text/css" href="/css/style.css">
+	<title><%= title %></title>	
+</head>
+<body>
+	<div id="content">
+		<div class="login-card">
+			<h2>Welcome to</h2>
+			<img src="/images/logo.png" />
+			<% if (!user) { %>
+				<% if (!base_grant_url) { %>
+					<p><b>You cannot initiate a login.</b></p>
+					<p>Please close this page and select the correct WiFi SSID to restart the process.</p>
+				<% } else { %>
+					<p>Please <a href="/login?base_grant_url=<%= base_grant_url %>"><b>Log in</b></a> to continue.</p>
+				<% } %>
+			<% } else { %>
+					<h4><%= user.displayName %><br>You are now connected!</h4>
+					<div class="login-help">Feel free to close this window.</div>
+					<!-- <a href="/logout">Log Out</a> -->
+			<% } %>						
+			<br>
+			<div class="footer">
+				Powered by <img src="/images/logo-spie.png" />
+			</div>
+		</div>
+	</div>
+</body>
+
+</html>

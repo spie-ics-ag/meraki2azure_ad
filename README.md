@@ -36,7 +36,9 @@ The steps below were copied from Meraki's official documentation [Configuring a 
 * Select the SSID you want to configure from the SSID drop-down.
 * Under Custom splash URL select the radio button Or provide a URL where users will be redirected:
 * Type the URL of your custom splash page:
-	`http://public-url.example.com/login`
+	`http://public-url.example.com`
+* Type the URL of your custom splash page:
+	`http://public-url.example.com`
 * Click Save Changes.
 
 ## Azure Setup
@@ -68,9 +70,9 @@ To successfully use this sample, you need a working installation of Node.js.
 Next, clone the sample repo and install the NPM.
 From your shell or command line:
 ```bash
-$ git clone git@github.com:spie-ics-ag/meraki2azure_ad.git
-$ cd meraki2azure_ad
-$ npm install
+git clone git@github.com:spie-ics-ag/meraki2azure_ad.git
+cd meraki2azure_ad
+npm install
 ```
 
 ### Step 3: Configure your server
@@ -83,21 +85,20 @@ export AZ_TENANT_ID=11111111-1111-1111-1111-111111111111
 export AZ_CLIENT_ID=00000000-0000-0000-0000-000000000000
 export AZ_CLIENT_SECRET=xxxxx~xxxxxx~xxxxxxxxxxxxxxxxxxxxxxxxxxx
 export REDIRECT_URL=http://public-url.example.com
+export SESSION_SECRET=<A_Secret_Key>
 ```
 
 ### Step 4: Run the application
 Run the app. Use the following command in terminal.
 ```bash
-$ node app.js
+npm run start
 ```
 
 ## You're done!
-You will have a server successfully running on `http://public-url.example.com` (or on `http://localhost:3000` if you are testing it locally).
+You will have a server successfully running on `https://public-url.example.com` (or on `http://localhost:3000` if you are testing it locally).
 
 ## User Experience
 When the user selects the configured wireless SSID, a splash page will be shown prompting for their Azure AD Credentials.
 
 # TODOs
-* CSS
-* Company Branding
 * ...

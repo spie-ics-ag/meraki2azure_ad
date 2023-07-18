@@ -1,53 +1,42 @@
 /**
- * Copyright (c) Microsoft Corporation
- *  All Rights Reserved
- *  MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this
- * software and associated documentation files (the 'Software'), to deal in the Software
- * without restriction, including without limitation the rights to use, copy, modify,
- * merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following
- * conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
- * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
- * OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+* Copyright 2023 SPIE ICS AG
+* 
+* Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), 
+* to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+* and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+* 
+* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+* INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
+* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+**/
 
 'use strict';
 
 /******************************************************************************
  * Module dependencies.
  *****************************************************************************/
+require('dotenv').config();
 
-var express = require('express');
-var logger = require('morgan');
-var serveStatic = require('serve-static')
-var cookieParser = require('cookie-parser');
-var expressSession = require('express-session');
-var bodyParser = require('body-parser');
-var methodOverride = require('method-override');
-var passport = require('passport');
-//var util = require('util');
-var bunyan = require('bunyan');
-var config = require('./config');
+const express = require('express');
+const logger = require('morgan');
+const serveStatic = require('serve-static');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const expressSession = require('express-session');
+const bodyParser = require('body-parser');
+const methodOverride = require('method-override');
+const passport = require('passport');
+const bunyan = require('bunyan');
+const helmet = require('helmet')
+const config = require('./config');
 
-// set up database for express session
-//var MongoStore = require('connect-mongo')(expressSession);
-//var mongoose = require('mongoose');
 
-// Start QuickStart here
+const OIDCStrategy = require('passport-azure-ad').OIDCStrategy;
 
-var OIDCStrategy = require('passport-azure-ad').OIDCStrategy;
-
-var log = bunyan.createLogger({
+const log = bunyan.createLogger({
   name: 'Meraki Azure AD Integration'
 });
 
@@ -72,13 +61,13 @@ passport.deserializeUser(function (oid, done) {
 });
 
 // array to hold logged in users
-var users = [];
+const users = [];
 
-var base_grant_url = ""
-var user_continue_url = ""
+let base_grant_url = null
+const user_continue_url = '/'
+const failure_redirect_url = '/'
 
-
-var findByOid = function (oid, fn) {
+const findByOid = function (oid, fn) {
   for (var i = 0, len = users.length; i < len; i++) {
     var user = users[i];
     log.info('we are using user: ', user);
@@ -124,7 +113,7 @@ passport.use(new OIDCStrategy({
   nonceMaxAmount: config.creds.nonceMaxAmount,
   useCookieInsteadOfSession: config.creds.useCookieInsteadOfSession,
   cookieEncryptionKeys: config.creds.cookieEncryptionKeys,
-  clockSkew: config.creds.clockSkew,
+  clockSkew: config.creds.clockSkew
 },
   function (iss, sub, profile, accessToken, refreshToken, done) {
     if (!profile.oid) {
@@ -147,42 +136,78 @@ passport.use(new OIDCStrategy({
   }
 ));
 
-
 //-----------------------------------------------------------------------------
 // Config the app, include middlewares
 //-----------------------------------------------------------------------------
-var app = express();
+const app = express();
 
-app.set('views', __dirname + '/views');
+app.set('views', path.join(__dirname + '/views'));
 app.set('view engine', 'ejs');
+// set up session middleware
+app.use(helmet());
 app.use(logger('combined'));
 app.use(methodOverride());
 app.use(cookieParser());
-
-// set up session middleware
-if (config.useMongoDBSessionStore) {
-  /*mongoose.connect(config.databaseUri);
-  app.use(express.session({
-    secret: 'secret',
-    cookie: {maxAge: config.mongoDBSessionMaxAge * 1000},
-    store: new MongoStore({
-      mongooseConnection: mongoose.connection,
-      clear_interval: config.mongoDBSessionMaxAge
-    })
-  }));*/
-} else {
-  app.use(expressSession({ secret: 'keyboard cat', resave: true, saveUninitialized: false }));
-}
-
+app.use(expressSession(
+  {
+    secret: process.env.SESSION_SECRET,
+    resave: true,
+    saveUninitialized: false,
+    cookie: {
+      // Session expires after 1 min of inactivity.
+      expires: 60000
+    }
+  }
+));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Initialize Passport!  Also use passport.session() middleware, to support
 // persistent login sessions (recommended).
 app.use(passport.initialize());
 app.use(passport.session());
-//app.use(express.static(__dirname + '/../../public'));
-//app.use(serveStatic(__dirname + '/../../public'));
 
+app.use(serveStatic(path.join(__dirname, 'public')));
+
+log.debug(`public path:  ${path.join(__dirname, 'public')}`);
+
+app.use(logErrors)
+app.use(clientErrorHandler)
+app.use(errorHandler)
+
+app.disable('x-powered-by');
+
+const target_mode = app.get('env') === 'development' ? 'development' : 'prod';
+
+log.info("Azure Identity: " + config.creds.identityMetadata)
+log.info("Azure Client ID: " + config.creds.clientID);
+//log.debug("Azure Client Secret: " + config.creds.clientSecret);
+log.info("Redirect URL: " + config.creds.redirectUrl);
+log.info("Destroy URL: " + config.destroySessionUrl);
+
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) { return next(); }
+  res.redirect('/login');
+};
+
+
+function logErrors(err, req, res, next) {
+  log.error(err.stack)
+  next(err)
+}
+
+function errorHandler(err, req, res, next) {
+  res.status(500)
+  res.render('error', { error: err })
+}
+
+function clientErrorHandler(err, req, res, next) {
+  //check if it is an X-Requested-With request
+  if (req.xhr) {
+    res.status(500).send({ error: 'Something failed!' })
+  } else {
+    next(err)
+  }
+}
 //-----------------------------------------------------------------------------
 // Set up the route controller
 //
@@ -194,52 +219,37 @@ app.use(passport.session());
 // `ensureAuthenticated`. It checks if there is an user stored in session, if not
 // it will call `passport.authenticate` to ask for user to log in.
 //-----------------------------------------------------------------------------
-function ensureAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) { return next(); }
-  res.redirect('/login');
-};
-
-log.info("Azure Identity: " + config.creds.identityMetadata)
-log.info("Azure Client ID: " + config.creds.clientID);
-//log.info("Azure Client Secret: " + config.creds.clientSecret);
-log.info("Redirect URL: " + config.creds.redirectUrl);
-log.info("Destroy URL: " + config.destroySessionUrl);
-
 app.get('/', function (req, res) {
-  //log.info(req)
+  //log.debug(req)
   var url = require('url');
   var url_parts = url.parse(req.url, true);
   var query = url_parts.query;
 
   base_grant_url = query.base_grant_url;
-  res.render('index', { user: req.user });
+  res.render('index', { user: req.user, base_grant_url, title: 'Meraki Captive Portal for Azure Active Directory' });
 });
 
-
-// '/account' is only available to logged in user
-app.get('/account', ensureAuthenticated, function (req, res) {
-  res.render('account', { user: req.user });
-});
-
+// 'GET login'
 app.get('/login',
   function (req, res, next) {
-    var url = require('url');
-    var url_parts = url.parse(req.url, true);
-    var query = url_parts.query;
-
-    base_grant_url = query.base_grant_url;
+    if (!base_grant_url) {
+      var url = require('url');
+      var url_parts = url.parse(req.url, true);
+      var query = url_parts.query;
+      base_grant_url = query.base_grant_url;
+    }
 
     passport.authenticate('azuread-openidconnect',
       {
         response: res,                      // required
         resourceURL: config.resourceURL,    // optional. Provide a value if you want to specify the resource.
         customState: 'my_state',            // optional. Provide a value if you want to provide custom state value.
-        failureRedirect: '/'
+        failureRedirect: failure_redirect_url
       }
     )(req, res, next);
   },
   function (req, res) {
-    res.redirect('/');
+    res.redirect(user_continue_url);
   });
 
 // 'GET returnURL'
@@ -251,13 +261,13 @@ app.get('/auth/openid/return',
     passport.authenticate('azuread-openidconnect',
       {
         response: res,                      // required
-        failureRedirect: '/'
+        failureRedirect: failure_redirect_url
       }
     )(req, res, next);
   },
   function (req, res) {
     log.info('We received a return from AzureAD.');
-    res.redirect('/');
+    res.redirect(user_continue_url);
   });
 
 // 'POST returnURL'
@@ -269,14 +279,14 @@ app.post('/auth/openid/return',
     passport.authenticate('azuread-openidconnect',
       {
         response: res,                      // required
-        failureRedirect: '/'
+        failureRedirect: failure_redirect_url
       }
     )(req, res, next);
   },
   function (req, res) {
     res.redirect(base_grant_url);
   });
-
+/*
 // 'logout' route, logout from passport, and destroy the session with AAD.
 app.get('/logout', function (req, res, next) {
   req.logout(function (err) {
@@ -287,5 +297,13 @@ app.get('/logout', function (req, res, next) {
   });
 });
 
-var port_number = app.listen(process.env.PORT || 3000);
-app.listen(port_number);
+*/
+const port = process.env.PORT || 3000;
+
+//start server forever
+app.listen(port, function (error) {
+  if (error)
+    log.error("An unhandled error occurred", error);
+  else
+    log.warn(`Meraki Azure AD Integration service is started on port ${port} in ${target_mode} mode!`);
+});
