@@ -1,18 +1,17 @@
 # IMPORTANT NOTES
-This repo is a fork of [Rafael Carvalho's meraki-azure-ad](https://github.com/rafael-carvalho/meraki-azure-ad). As it was no longer updated nor maintained, we updated the code to use the latest npm versions.
+This repo was originally is a fork of [Rafael Carvalho's meraki-azure-ad](https://github.com/rafael-carvalho/meraki-azure-ad). As it was no longer updated nor maintained, we updated the code to use the latest npm versions.
 
-The application uses [passport-azure-ad](https://github.com/AzureAD/passport-azure-ad), which is deprecated. It has to be rewritten using [MSAL.js](https://github.com/AzureAD/microsoft-authentication-library-for-js)
+The application still uses [passport-azure-ad](https://github.com/AzureAD/passport-azure-ad), which is deprecated. It has to be rewritten using [MSAL.js](https://github.com/AzureAD/microsoft-authentication-library-for-js)
+
 
 # Meraki Captive Portal with Azure Active Directory 
 This Node.js app was created to facilitate the authorization of users registered on an Azure Active Directory with Meraki wireless infrastructures. Instead of using a RADIUS server for the authentication, you can spin up a web server that will be serving as your Captive Portal, which will then authenticate the user using OAuth
 
 ## References
-This application and the step by step below were created / cloned based on the code provided by Microsoft, hosted [here](https://github.com/AzureADQuickStarts/WebApp-OpenIDConnect-NodeJS). Additionally, the information available at Meraki's [documentation](https://create.meraki.io/build/captive-portal-with-client-side-javascript/) about building your own JavaScript captive portal or the [click-through-api](https://developer.cisco.com/meraki/captive-portal-api/click-through-api/) description. For the sake of simplicity, any MongoDB action is commented out, but if you want to store user information somewhere, the original service provided by Azure gives you that flexibility.
-
+This application and the step by step below were created / cloned based on the code provided by Microsoft, hosted [here](https://github.com/AzureADQuickStarts/WebApp-OpenIDConnect-NodeJS). Additionally, the information available at Meraki's [documentation](https://create.meraki.io/build/captive-portal-with-client-side-javascript/) about building your own JavaScript captive portal or the [click-through-api](https://developer.cisco.com/meraki/captive-portal-api/click-through-api/) description.
 
 ## Quick Start
 In order to work with Meraki's captive portal, your server will need to run on a publicly available IP, i.e., you will need to host it out in the Internet. There are several alternatives to address this. For development purposes, you can use ngrok, which will create introspectable tunnels to your localhost. For production environments, you can use Heroku, which is a PAAS that has a free tier of service or Azure Webapp which also have a Free plan.
-
 * Getting Started on Heroku with Node.js - [Getting started guide](https://devcenter.heroku.com/articles/getting-started-with-nodejs#introduction)
 * Quickstarts - [Deploy a Node.js web app in Azure](https://learn.microsoft.com/en-us/azure/app-service/quickstart-nodejs?tabs=linux&pivots=development-environment-azure-portal)
 * ngrok - [How it works](https://ngrok.com/product)
@@ -37,9 +36,8 @@ The steps below were copied from Meraki's official documentation [Configuring a 
 * Under Custom splash URL select the radio button Or provide a URL where users will be redirected:
 * Type the URL of your custom splash page:
 	`http://public-url.example.com`
-* Type the URL of your custom splash page:
-	`http://public-url.example.com`
 * Click Save Changes.
+
 
 ## Azure Setup
 ### Step 1: Register an Azure AD Tenant
@@ -62,6 +60,7 @@ Create an `App Registration` object
 * CLIENT_ID: your `App Registration` ID
 * CLIENT_SECRET: your `Client secret` value
 
+
 ## This APP setup
 ### Step 1: Download node.js for your platform
 To successfully use this sample, you need a working installation of Node.js.
@@ -77,9 +76,8 @@ npm install
 
 ### Step 3: Configure your server
 Provide the parameters in `exports.creds` in config.js as instructed.
-Update `exports.destroySessionUrl` in config.js, if you want to use a different `post_logout_redirect_uri`.
 
-You'll notice some parameters are read from the environment variables. You need to export the as follow before starting your app:
+Some mandatory parameters are read from the environment variables. You need to export them as follow before starting your app:
 ```bash
 export AZ_TENANT_ID=11111111-1111-1111-1111-111111111111
 export AZ_CLIENT_ID=00000000-0000-0000-0000-000000000000
@@ -88,7 +86,7 @@ export REDIRECT_URL=http://public-url.example.com
 export SESSION_SECRET=<A_Secret_Key>
 ```
 
-Optionally, you can override the `public` directory path, with: 
+Optionally, if you want to change the CSS and the logos, you can override the `public` directory path to your customized path, with: 
 ```bash
 export PUBLIC_DIR_PATH=custom_public
 ```
@@ -108,4 +106,4 @@ You will have a server successfully running on `https://public-url.example.com` 
 When the user selects the configured wireless SSID, a splash page will be shown prompting for their Azure AD Credentials.
 
 # TODOs
-* ...
+* The application still uses [passport-azure-ad](https://github.com/AzureAD/passport-azure-ad), which is deprecated. It has to be rewritten using [MSAL.js](https://github.com/AzureAD/microsoft-authentication-library-for-js)
