@@ -88,6 +88,13 @@ export REDIRECT_URL=http://public-url.example.com
 export SESSION_SECRET=<A_Secret_Key>
 ```
 
+Optionally, you can override the `public` directory path, with: 
+```bash
+export PUBLIC_DIR_PATH=custom_public
+```
+
+Note: the `PUBLIC_DIR_PATH` is relative to the `src` folder. This is useful for Azure Storage Mount
+
 ### Step 4: Run the application
 Run the app. Use the following command in terminal.
 ```bash

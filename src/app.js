@@ -24,7 +24,7 @@ const express = require('express');
 const logger = require('morgan');
 const serveStatic = require('serve-static');
 const path = require('path');
-const cookieParser = require('cookie-parser');
+//const cookieParser = require('cookie-parser');
 const expressSession = require('express-session');
 const bodyParser = require('body-parser');
 const methodOverride = require('method-override');
@@ -137,7 +137,7 @@ passport.use(new OIDCStrategy({
 ));
 
 //-----------------------------------------------------------------------------
-// Config the app, include middlewares
+// Config the app, include middleware
 //-----------------------------------------------------------------------------
 const app = express();
 
@@ -147,7 +147,7 @@ app.set('view engine', 'ejs');
 app.use(helmet());
 app.use(logger('combined'));
 app.use(methodOverride());
-app.use(cookieParser());
+//app.use(cookieParser());
 app.use(expressSession(
   {
     secret: process.env.SESSION_SECRET,
@@ -166,9 +166,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use(serveStatic(path.join(__dirname, 'public')));
+app.use(serveStatic(path.join(__dirname, process.env.PUBLIC_DIR_PATH || 'public')));
 
-log.debug(`public path:  ${path.join(__dirname, 'public')}`);
+log.debug(`public path:  ${path.join(__dirname, process.env.PUBLIC_DIR_PATH || 'public')}`);
 
 app.use(logErrors)
 app.use(clientErrorHandler)
