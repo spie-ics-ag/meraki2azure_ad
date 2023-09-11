@@ -1,8 +1,8 @@
 #content,
-.login,
-.login-card a,
-.login-card h1,
-.login-help {
+.view,
+.view-card a,
+.view-card h1,
+.view-help {
   text-align: center;
 }
 
@@ -26,7 +26,7 @@ html {
   vertical-align: middle;
 }
 
-.login-card {
+.view-card {
   padding: 40px;
   width: 274px;
   background-color: #f7f7f7;
@@ -36,13 +36,13 @@ html {
   overflow: hidden;
 }
 
-.login-card h2 {
+.view-card h2 {
   font-weight: 200;
   font-size: 2.0em;
   color: #000;
 }
 
-.login-card img {
+.view-card img {
   width: 70%;
   height: 70%;
   margin: 0 auto;
@@ -56,7 +56,7 @@ html {
   padding-bottom: 0px;
 }
 
-.login-card a {
+.view-card a {
   text-decoration: none;
   color: #222;
   font-weight: 400;
@@ -65,12 +65,12 @@ html {
   transition: opacity ease 0.5s;
 }
 
-.login-card a:hover {
+.view-card a:hover {
   opacity: 1;
   color: #dd0000;
 }
 
-.login-help {
+.view-help {
   width: 100%;
   /*font-size: 12px;*/
 }
@@ -97,11 +97,11 @@ label {
 }
 
 @media screen and (max-width: 450px) {
-  .login-card {
+  .view-card {
     width: 70% !important;
   }
 
-  .login-card img {
+  .view-card img {
     width: 30%;
     height: 30%;
   }
