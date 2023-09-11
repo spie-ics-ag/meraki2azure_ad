@@ -3,6 +3,8 @@
         "loglevel",
         "Meraki",
         "msal",
+        "OIDC",
+        "PKCE",
         "signin",
         "signout",
         "spie",

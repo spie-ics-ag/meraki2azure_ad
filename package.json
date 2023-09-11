@@ -1,28 +1,35 @@
 {
-  "name": "meraki2azure-msal",
-  "version": "0.0.0",
-  "private": true,
-  "scripts": {
-    "start": "node ./bin/www",
-    "devstart": "nodemon ./bin/www",
-    "serverstart": "SET DEBUG=meraki2azure-msal:* & npm run devstart"
-  },
-  "dependencies": {
-    "@azure/msal-node": "^2.0.2",
-    "axios": "^1.5.0",
-    "cookie-parser": "~1.4.4",
-    "debug": "~2.6.9",
-    "dotenv": "^16.3.1",
-    "ejs": "^3.1.9",
-    "express": "~4.16.1",
-    "express-session": "^1.17.3",
-    "favicon": "^0.0.2",
-    "helmet": "^7.0.0",
-    "http-errors": "~1.6.3",
-    "morgan": "~1.9.1",
-    "serve-favicon": "^2.5.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
-  }
+    "name": "meraki2azure-msal",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+        "start": "node ./bin/www",
+        "devstart": "nodemon ./bin/www",
+        "serverstart": "SET DEBUG=meraki2azure-msal:* & npm run devstart",
+        "format:check": "prettier --check src/.",
+        "format:write": "prettier --write src/.",
+        "lint:check": "eslint src/.",
+        "lint:fix": "eslint --fix src/."
+    },
+    "dependencies": {
+        "@azure/msal-node": "^2.0.2",
+        "axios": "^1.5.0",
+        "cookie-parser": "~1.4.4",
+        "debug": "~2.6.9",
+        "dotenv": "^16.3.1",
+        "ejs": "^3.1.9",
+        "express": "~4.16.1",
+        "express-session": "^1.17.3",
+        "favicon": "^0.0.2",
+        "helmet": "^7.0.0",
+        "http-errors": "~1.6.3",
+        "morgan": "~1.9.1",
+        "serve-favicon": "^2.5.0"
+    },
+    "devDependencies": {
+        "eslint": "^8.49.0",
+        "eslint-config-prettier": "^9.0.0",
+        "nodemon": "^3.0.1",
+        "prettier": "^3.0.3"
+    }
 }

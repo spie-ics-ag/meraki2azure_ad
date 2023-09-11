@@ -3,23 +3,21 @@
  * Licensed under the MIT License.
  */
 
+'use strict';
+
 const msal = require('@azure/msal-node');
 const axios = require('axios');
 
 const { msalConfig } = require('../authConfig');
 
 class AuthProvider {
-    msalConfig;
-    cryptoProvider;
-
     constructor(msalConfig) {
-        this.msalConfig = msalConfig
+        this.msalConfig = msalConfig;
         this.cryptoProvider = new msal.CryptoProvider();
-    };
+    }
 
     login(options = {}) {
         return async (req, res, next) => {
-
             /**
              * MSAL Node library allows you to pass your custom state as state parameter in the Request object.
              * The state parameter can also be used to encode information of the app's state before redirect.
@@ -54,20 +52,30 @@ class AuthProvider {
             };
 
             /**
-             * If the current msal configuration does not have cloudDiscoveryMetadata or authorityMetadata, we will 
-             * make a request to the relevant endpoints to retrieve the metadata. This allows MSAL to avoid making 
+             * If the current msal configuration does not have cloudDiscoveryMetadata or authorityMetadata, we will
+             * make a request to the relevant endpoints to retrieve the metadata. This allows MSAL to avoid making
              * metadata discovery calls, thereby improving performance of token acquisition process. For more, see:
              * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-node/docs/performance.md
              */
-            if (!this.msalConfig.auth.cloudDiscoveryMetadata || !this.msalConfig.auth.authorityMetadata) {
+            if (
+                !this.msalConfig.auth.cloudDiscoveryMetadata ||
+                !this.msalConfig.auth.authorityMetadata
+            ) {
+                const [cloudDiscoveryMetadata, authorityMetadata] =
+                    await Promise.all([
+                        this.getCloudDiscoveryMetadata(
+                            this.msalConfig.auth.authority
+                        ),
+                        this.getAuthorityMetadata(
+                            this.msalConfig.auth.authority
+                        ),
+                    ]);
 
-                const [cloudDiscoveryMetadata, authorityMetadata] = await Promise.all([
-                    this.getCloudDiscoveryMetadata(this.msalConfig.auth.authority),
-                    this.getAuthorityMetadata(this.msalConfig.auth.authority)
-                ]);
-
-                this.msalConfig.auth.cloudDiscoveryMetadata = JSON.stringify(cloudDiscoveryMetadata);
-                this.msalConfig.auth.authorityMetadata = JSON.stringify(authorityMetadata);
+                this.msalConfig.auth.cloudDiscoveryMetadata = JSON.stringify(
+                    cloudDiscoveryMetadata
+                );
+                this.msalConfig.auth.authorityMetadata =
+                    JSON.stringify(authorityMetadata);
             }
 
             const msalInstance = this.getMsalInstance(this.msalConfig);
@@ -81,7 +89,8 @@ class AuthProvider {
         };
     }
 
-    handleRedirect(options = {}) {
+    // eslint-disable-next-line no-unused-vars
+    handleRedirect(_options = {}) {
         return async (req, res, next) => {
             if (!req.body || !req.body.state) {
                 return next(new Error('Error: response not found'));
@@ -97,27 +106,36 @@ class AuthProvider {
                 const msalInstance = this.getMsalInstance(this.msalConfig);
 
                 if (req.session.tokenCache) {
-                    msalInstance.getTokenCache().deserialize(req.session.tokenCache);
+                    msalInstance
+                        .getTokenCache()
+                        .deserialize(req.session.tokenCache);
                 }
 
-                const tokenResponse = await msalInstance.acquireTokenByCode(authCodeRequest, req.body);
+                const tokenResponse = await msalInstance.acquireTokenByCode(
+                    authCodeRequest,
+                    req.body
+                );
 
-                req.session.tokenCache = msalInstance.getTokenCache().serialize();
+                req.session.tokenCache = msalInstance
+                    .getTokenCache()
+                    .serialize();
                 req.session.idToken = tokenResponse.idToken;
                 req.session.account = tokenResponse.account;
                 req.session.isAuthenticated = true;
 
-                const state = JSON.parse(this.cryptoProvider.base64Decode(req.body.state));
+                const state = JSON.parse(
+                    this.cryptoProvider.base64Decode(req.body.state)
+                );
                 res.redirect(state.successRedirect);
             } catch (error) {
                 next(error);
             }
-        }
+        };
     }
 
     logout(options = {}) {
-        return (req, res, next) => {
-
+        // eslint-disable-next-line no-unused-vars
+        return (req, res, _next) => {
             /**
              * Construct a logout URI and redirect the user to end the
              * session with Azure AD. For more information, visit:
@@ -132,18 +150,17 @@ class AuthProvider {
             req.session.destroy(() => {
                 res.redirect(logoutUri);
             });
-        }
+        };
     }
 
     /**
      * Instantiates a new MSAL ConfidentialClientApplication object
-     * @param msalConfig: MSAL Node Configuration object 
-     * @returns 
+     * @param msalConfig: MSAL Node Configuration object
+     * @returns
      */
     getMsalInstance(msalConfig) {
         return new msal.ConfidentialClientApplication(msalConfig);
     }
-
 
     /**
      * Prepares the auth code request parameters and initiates the first leg of auth code flow
@@ -153,10 +170,15 @@ class AuthProvider {
      * @param authCodeUrlRequestParams: parameters for requesting an auth code url
      * @param authCodeRequestParams: parameters for requesting tokens using auth code
      */
-    redirectToAuthCodeUrl(authCodeUrlRequestParams, authCodeRequestParams, msalInstance) {
+    redirectToAuthCodeUrl(
+        authCodeUrlRequestParams,
+        authCodeRequestParams,
+        msalInstance
+    ) {
         return async (req, res, next) => {
             // Generate PKCE Codes before starting the authorization flow
-            const { verifier, challenge } = await this.cryptoProvider.generatePkceCodes();
+            const { verifier, challenge } =
+                await this.cryptoProvider.generatePkceCodes();
 
             // Set generated PKCE codes and method as session vars
             req.session.pkceCodes = {
@@ -184,7 +206,9 @@ class AuthProvider {
             };
 
             try {
-                const authCodeUrlResponse = await msalInstance.getAuthCodeUrl(req.session.authCodeUrlRequest);
+                const authCodeUrlResponse = await msalInstance.getAuthCodeUrl(
+                    req.session.authCodeUrlRequest
+                );
                 res.redirect(authCodeUrlResponse);
             } catch (error) {
                 next(error);
@@ -194,23 +218,18 @@ class AuthProvider {
 
     /**
      * Retrieves cloud discovery metadata from the /discovery/instance endpoint
-     * @returns 
+     * @returns
      */
     async getCloudDiscoveryMetadata(authority) {
-        const endpoint = 'https://login.microsoftonline.com/common/discovery/instance';
-
-        try {
-            const response = await axios.get(endpoint, {
-                params: {
-                    'api-version': '1.1',
-                    'authorization_endpoint': `${authority}/oauth2/v2.0/authorize`
-                }
-            });
-
-            return await response.data;
-        } catch (error) {
-            throw error;
-        }
+        const endpoint =
+            'https://login.microsoftonline.com/common/discovery/instance';
+        const response = await axios.get(endpoint, {
+            params: {
+                'api-version': '1.1',
+                authorization_endpoint: `${authority}/oauth2/v2.0/authorize`,
+            },
+        });
+        return await response.data;
     }
 
     /**
@@ -224,7 +243,7 @@ class AuthProvider {
             const response = await axios.get(endpoint);
             return await response.data;
         } catch (error) {
-            console.log(error);
+            console.error(`error on getAuthorityMetadata ${error}`);
         }
     }
 }
