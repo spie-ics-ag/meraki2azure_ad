@@ -18,7 +18,7 @@ router.get('/', function (req, res, next) {
     username: req.session.account?.username,
     base_grant_url: query.base_grant_url,
     isDevelopment: process.env.NODE_ENV === 'development',
-    ssid: process.env.SSID || 'GuestAreaWiFi'
+    ssid: process.env.SSID || 'WiFi'
   });
 });
 
