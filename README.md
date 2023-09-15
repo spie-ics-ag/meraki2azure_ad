@@ -2,7 +2,7 @@
 This Node.js app was created to facilitate the authorization of users registered on an Azure Active Directory with Meraki wireless infrastructures. Instead of using a RADIUS server for the authentication, you can spin up a web server that will be serving as your Captive Portal, which will then authenticate the user using OAuth
 
 ## References
-This application and the step by step below were created / cloned based on the code provided by Microsoft, hosted [here](https://learn.microsoft.com/en-us/azure/active-directory/develop/tutorial-v2-nodejs-webapp-msal). Additionally, the information available at Meraki's [documentation](https://create.meraki.io/build/captive-portal-with-client-side-javascript/) about building your own JavaScript captive portal or the [click-through-api](https://developer.cisco.com/meraki/captive-portal-api/click-through-api/) description.
+This application and the step by step below were created / cloned based on the code provided by Microsoft, hosted [here](https://learn.microsoft.com/en-us/azure/active-directory/develop/tutorial-v2-nodejs-webapp-msal). Additionally, the information available at Meraki's [documentation](https://create.meraki.io/build/captive-portal-with-client-side-javascript/) about building your own JavaScript captive portal or the [click-through-api](https://developer.cisco.com/meraki/captive-portal-api/click-through-api/) description. This [one](https://developer.cisco.com/meraki/build/captive-portal-with-client-side-javascript/) is also helpful.
 
 ## Quick Start
 In order to work with Meraki's captive portal, your server will need to run on a publicly available IP, i.e., you will need to host it out in the Internet. There are several alternatives to address this. For development purposes, you can use ngrok, which will create introspectable tunnels to your localhost. For production environments, you can use Heroku, which is a PAAS that has a free tier of service or Azure Webapp which also have a Free plan.
@@ -14,7 +14,7 @@ Once you have the public URL where the server will run, take note of that. It wi
 
 ## Meraki Dashboard Setup
 The steps below were copied from Meraki's official documentation [Configuring a Custom-Hosted Splash Page
-](https://documentation.meraki.com/MR/Splash_Page/Configuring_a_Custom-Hosted_Splash_Page)
+](https://documentation.meraki.com/General_Administration/Cross-Platform_Content/Configuring_a_Custom-Hosted_Splash_Page_to_Work_with_the_Meraki_Cloud)
 
 ### Configure Access Control
 * In Dashboard, navigate to Configure > Access control.
@@ -69,8 +69,6 @@ npm install
 ```
 
 ### Step 3: Configure your server
-Provide the parameters in `exports.creds` in config.js as instructed.
-
 Some mandatory parameters are read from the environment variables. You need to export them as follow before starting your app:
 ```bash
 export CLOUD_INSTANCE=https://login.microsoftonline.com/
@@ -102,6 +100,11 @@ npm run start
 
 ## You're done!
 You will have a server successfully running on `https://public-url.example.com` (or on `http://localhost:3000` if you are testing it locally).
+
+### Testing before the Meraki config is done
+You can test the application without the Meraki config (for example, to validate the connection and authentication to the Azure AD is working properly). For this, just pass a fake `base_grant_url` parameter to your server:
+`https://public-url.example.com?base_grant_url=whatever`
+You will get the Login page, will be able to login to Azure AD, but the redirection will fail (as you didn't pass a valid base_grant_url). But if you go again to `https://public-url.example.com/auth/signin`, you'll see you are successfully logged in.
 
 ## User Experience
 When the user selects the configured wireless SSID, a splash page will be shown prompting for their Azure AD Credentials.
