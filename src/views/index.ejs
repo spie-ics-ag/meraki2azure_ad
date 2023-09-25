@@ -19,7 +19,7 @@
             <% } %>
             <% } else { %>
             <% if (base_grant_url) { %>
-            <p>Please <a href="/auth/signin?base_grant_url=<%= base_grant_url %>"><b>Log in</b></a> to continue.</p>
+            <p>Please <a href="/auth/signin?base_grant_url=<%= base_grant_url %>&user_continue_url=<%= user_continue_url  %>"><b>Log in</b></a> to continue.</p>
             <% } else { %>
             <p><b>You cannot initiate a login.</b></p>
             <p>Please close this page and select the SSID <b><%= ssid %></b>.</p>

@@ -21,6 +21,7 @@ router.get('/', function (req, res, _next) {
         isAuthenticated: req.session.isAuthenticated,
         username: req.session.account?.username,
         base_grant_url: query.base_grant_url,
+        user_continue_url: query.user_continue_url || process.env.REDIRECT_URL,
         isDevelopment: process.env.NODE_ENV === 'development',
         ssid: process.env.SSID || 'WiFi',
     });

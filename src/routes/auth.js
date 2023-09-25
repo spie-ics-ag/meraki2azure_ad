@@ -17,7 +17,6 @@ router.get(
     authProvider.login({
         scopes: [],
         redirectUri,
-        successRedirect: '/',
     })
 );
 

@@ -7,7 +7,7 @@
 
 const msal = require('@azure/msal-node');
 const axios = require('axios');
-
+const url = require('url');
 const { msalConfig } = require('../authConfig');
 
 class AuthProvider {
@@ -23,9 +23,13 @@ class AuthProvider {
              * The state parameter can also be used to encode information of the app's state before redirect.
              * You can pass the user's state in the app, such as the page or view they were on, as input to this parameter.
              */
+
+            const url_parts = url.parse(req.url, true);
+            const query = url_parts.query;
+
             const state = this.cryptoProvider.base64Encode(
                 JSON.stringify({
-                    successRedirect: options.successRedirect || '/',
+                    successRedirect: `${query.base_grant_url}?continue_url=${query.user_continue_url}`,
                 })
             );
 

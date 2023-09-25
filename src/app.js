@@ -58,8 +58,17 @@ app.set('view engine', 'ejs');
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, process.env.PUBLIC_DIR_PATH || 'public')));
-console.log(`public path:  ${path.join(__dirname, process.env.PUBLIC_DIR_PATH || 'public')}`);
+app.use(
+    express.static(
+        path.join(__dirname, process.env.PUBLIC_DIR_PATH || 'public')
+    )
+);
+console.log(
+    `public path:  ${path.join(
+        __dirname,
+        process.env.PUBLIC_DIR_PATH || 'public'
+    )}`
+);
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: true }));
