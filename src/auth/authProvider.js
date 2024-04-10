@@ -131,15 +131,24 @@ class AuthProvider {
                 const state = JSON.parse(
                     this.cryptoProvider.base64Decode(req.body.state)
                 );
-
-                // Accept https
+                 // Accept https and validate domain suffix
                 const schema = Joi.string().uri({
                     scheme: [
-                        /https/
+                        /https?/
                     ]
-                });                
-                const successRedirect = await schema.validateAsync(state.successRedirect);
-                res.redirect(successRedirect);
+                }).custom((value, helpers) => {
+                    const url = new URL(value);
+                    if (!url.hostname.endsWith('network-auth.com')) {
+                        return helpers.error('any.invalid');
+                    }
+                    return value;
+                }, 'Domain suffix validation');
+                // Decode Base64 URL
+                const decodedUrl = decodeURIComponent(state.successRedirect);
+                //do the validation against the decoded URL
+                const successRedirect = await schema.validateAsync(decodedUrl);
+                //it's safe to redirect to the provided URL
+                res.redirect(state.successRedirect);
             } catch (error) {
                 next(error);
             }
