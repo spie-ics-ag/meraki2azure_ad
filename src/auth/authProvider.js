@@ -9,6 +9,7 @@ const msal = require('@azure/msal-node');
 const axios = require('axios');
 const url = require('url');
 const { msalConfig } = require('../authConfig');
+const Joi = require('joi');
 
 class AuthProvider {
     constructor(msalConfig) {
@@ -130,7 +131,15 @@ class AuthProvider {
                 const state = JSON.parse(
                     this.cryptoProvider.base64Decode(req.body.state)
                 );
-                res.redirect(state.successRedirect);
+
+                // Accept https
+                const schema = Joi.string().uri({
+                    scheme: [
+                        /https/
+                    ]
+                });                
+                const successRedirect = await schema.validateAsync(state.successRedirect);
+                res.redirect(successRedirect);
             } catch (error) {
                 next(error);
             }
