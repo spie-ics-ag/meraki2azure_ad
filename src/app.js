@@ -29,6 +29,7 @@ const favicon = require('serve-favicon');
 const path = require('path');
 const indexRouter = require('./routes/index');
 const authRouter = require('./routes/auth');
+const rateLimit = require("express-rate-limit");
 
 // initialize express
 const app = express();
@@ -74,9 +75,30 @@ app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan('tiny'));
 
+// Rate limiter middleware
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP/user to 100 requests per windowMs
+    standardHeaders: 'draft-7', // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
+    skipSuccessfulRequests: true, // Do not count successful requests
+    handler: function (req, res, next) {        
+        res.locals.message = "Rate limit exceeded";
+        res.locals.error = "Too many requests, please try again later.";
+        res.locals.status = 429;
+        // render the error page
+        res.status(res.locals.status);
+        res.render('error');
+    },
+});
+
+app.use(limiter);
+
 // define routes
 app.use('/', indexRouter);
 app.use('/auth', authRouter);
+
+
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
