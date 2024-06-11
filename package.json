@@ -13,7 +13,7 @@
     },
     "dependencies": {
         "@azure/msal-node": "^2.9.1",
-        "axios": "^1.7.0",
+        "axios": "^1.7.1",
         "cookie-parser": "~1.4.4",
         "debug": "~4.3.4",
         "dotenv": "^16.4.5",
