@@ -12,7 +12,7 @@
         "lint:fix": "eslint --fix src/."
     },
     "dependencies": {
-        "@azure/msal-node": "^3.2.2",
+        "@azure/msal-node": "^3.3.0",
         "axios": "^1.8.2",
         "cookie": "^1.0.2",
         "cookie-parser": "^1.4.7",
