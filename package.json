@@ -17,7 +17,7 @@
         "cookie": "^1.0.2",
         "cookie-parser": "^1.4.7",
         "debug": "~4.4.0",
-        "dotenv": "^16.4.7",
+        "dotenv": "^16.5.0",
         "ejs": "^3.1.10",
         "express": "^5.1.0",
         "express-rate-limit": "^7.5.0",
