@@ -12,7 +12,7 @@
         "lint:fix": "eslint --fix src/."
     },
     "dependencies": {
-        "@azure/msal-node": "^3.5.1",
+        "@azure/msal-node": "^3.5.3",
         "axios": "^1.9.0",
         "cookie": "^1.0.2",
         "cookie-parser": "^1.4.7",
@@ -29,9 +29,9 @@
         "serve-favicon": "^2.5.0"
     },
     "devDependencies": {
-        "eslint": "^9.24.0",
-        "eslint-config-prettier": "^10.1.2",
-        "nodemon": "^3.1.9",
+        "eslint": "^9.27.0",
+        "eslint-config-prettier": "^10.1.5",
+        "nodemon": "^3.1.10",
         "prettier": "^3.5.3"
     }
 }
