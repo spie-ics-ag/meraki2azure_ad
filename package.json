@@ -32,7 +32,7 @@
         "eslint": "^9.29.0",
         "eslint-config-prettier": "^10.1.5",
         "nodemon": "^3.1.10",
-        "prettier": "^3.5.3"
+        "prettier": "^3.6.2"
     },
     "overrides": {
         "brace-expansion": "^2.0.2"
