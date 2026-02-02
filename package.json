@@ -26,6 +26,7 @@
         "http-errors": "~2.0.0",
         "joi": "^18.0.2",
         "morgan": "~1.10.1",
+        "pkce-challenge": "^6.0.0",
         "serve-favicon": "^2.5.1"
     },
     "devDependencies": {

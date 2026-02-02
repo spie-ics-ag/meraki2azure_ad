@@ -7,14 +7,35 @@
 
 const msal = require('@azure/msal-node');
 const axios = require('axios');
-const url = require('url');
+const crypto = require('crypto');
 const { msalConfig } = require('../authConfig');
 const Joi = require('joi');
 
 class AuthProvider {
     constructor(msalConfig) {
         this.msalConfig = msalConfig;
-        this.cryptoProvider = new msal.CryptoProvider();
+    }
+
+    // Helper methods to replace CryptoProvider functionality
+    base64Encode(input) {
+        return Buffer.from(input).toString('base64');
+    }
+
+    base64Decode(input) {
+        return Buffer.from(input, 'base64').toString('utf8');
+    }
+
+    async generatePkceCodes() {
+        // Generate a random verifier (43-128 characters)
+        const verifier = crypto.randomBytes(32).toString('base64url');
+        
+        // Generate challenge from verifier using SHA256
+        const challenge = crypto
+            .createHash('sha256')
+            .update(verifier)
+            .digest('base64url');
+
+        return { verifier, challenge };
     }
 
     login(options = {}) {
@@ -25,10 +46,9 @@ class AuthProvider {
              * You can pass the user's state in the app, such as the page or view they were on, as input to this parameter.
              */
 
-            const url_parts = url.parse(req.url, true);
-            const query = url_parts.query;
+            const query = req.query; // Express already parses query params
 
-            const state = this.cryptoProvider.base64Encode(
+            const state = this.base64Encode(
                 JSON.stringify({
                     successRedirect: `${query.base_grant_url}?continue_url=${query.user_continue_url}`,
                 })
@@ -37,7 +57,7 @@ class AuthProvider {
             const authCodeUrlRequestParams = {
                 state: state,
 
-                /**
+                 /**
                  * By default, MSAL Node will add OIDC scopes to the auth code url request. For more information, visit:
                  * https://docs.microsoft.com/azure/active-directory/develop/v2-permissions-and-consent#openid-connect-scopes
                  */
@@ -128,10 +148,18 @@ class AuthProvider {
                 req.session.account = tokenResponse.account;
                 req.session.isAuthenticated = true;
 
-                const state = JSON.parse(
-                    this.cryptoProvider.base64Decode(req.body.state)
-                );
-                 // Accept https and validate domain suffix
+                // Parse state with error handling
+                let state;
+                try {
+                    state = JSON.parse(this.base64Decode(req.body.state));
+                } catch {
+                    return next(new Error('Invalid state parameter'));
+                }
+
+                if (!state.successRedirect) {
+                    return next(new Error('Missing redirect URL in state'));
+                }
+                // Accept https and validate domain suffix
                 const schema = Joi.string().uri({
                     scheme: [
                         /https?/
@@ -146,9 +174,9 @@ class AuthProvider {
                 // Decode Base64 URL
                 const decodedUrl = decodeURIComponent(state.successRedirect);
                 //do the validation against the decoded URL
-                const successRedirect = await schema.validateAsync(decodedUrl);
+                const validatedRedirectUrl  = await schema.validateAsync(decodedUrl);
                 //it's safe to redirect to the provided URL
-                res.redirect(state.successRedirect);
+                res.redirect(validatedRedirectUrl);
             } catch (error) {
                 next(error);
             }
@@ -199,8 +227,7 @@ class AuthProvider {
     ) {
         return async (req, res, next) => {
             // Generate PKCE Codes before starting the authorization flow
-            const { verifier, challenge } =
-                await this.cryptoProvider.generatePkceCodes();
+            const { verifier, challenge } = await this.generatePkceCodes();
 
             // Set generated PKCE codes and method as session vars
             req.session.pkceCodes = {
