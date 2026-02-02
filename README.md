@@ -4,6 +4,63 @@ This Node.js app was created to facilitate the authorization of users registered
 ## References
 This application and the step by step below were created / cloned based on the code provided by Microsoft, hosted [here](https://learn.microsoft.com/en-us/azure/active-directory/develop/tutorial-v2-nodejs-webapp-msal). Additionally, the information available at Meraki's [documentation](https://create.meraki.io/build/captive-portal-with-client-side-javascript/) about building your own JavaScript captive portal or the [click-through-api](https://developer.cisco.com/meraki/captive-portal-api/click-through-api/) description. This [one](https://developer.cisco.com/meraki/build/captive-portal-with-client-side-javascript/) is also helpful.
 
+## Authentication Details
+
+| Component | Value |
+|-----------|-------|
+| **Flow** | Authorization Code Flow with PKCE |
+| **Client Type** | Confidential Client (`ConfidentialClientApplication`) |
+| **Identity Provider** | Microsoft Entra ID (Azure AD) |
+| **Response Mode** | `FORM_POST` |
+| **PKCE Method** | S256 (SHA-256) |
+
+## OAuth 2.0 Authorization Code Flow with PKCE
+
+```
+┌──────────┐      ┌──────────────┐      ┌─────────────┐      ┌─────────────────┐
+│  User    │      │ Your App     │      │  Azure AD   │      │ Meraki Network  │
+│ (Captive │      │ (Express)    │      │             │      │ Auth            │
+│  Portal) │      │              │      │             │      │                 │
+└────┬─────┘      └──────┬───────┘      └──────┬──────┘      └────────┬────────┘
+     │                   │                     │                      │
+     │ 1. Access network │                     │                      │
+     │ ─────────────────>│                     │                      │
+     │                   │                     │                      │
+     │                   │ 2. Generate PKCE    │                      │
+     │                   │    (verifier +      │                      │
+     │                   │     challenge)      │                      │
+     │                   │                     │                      │
+     │ 3. Redirect to Azure AD                 │                      │
+     │ <─────────────────│────────────────────>│                      │
+     │                   │                     │                      │
+     │ 4. User authenticates                   │                      │
+     │ ───────────────────────────────────────>│                      │
+     │                   │                     │                      │
+     │ 5. Auth code (POST)                     │                      │
+     │ <───────────────────────────────────────│                      │
+     │ ─────────────────>│                     │                      │
+     │                   │                     │                      │
+     │                   │ 6. Exchange code    │                      │
+     │                   │    + verifier       │                      │
+     │                   │    for tokens       │                      │
+     │                   │ ───────────────────>│                      │
+     │                   │ <───────────────────│                      │
+     │                   │                     │                      │
+     │ 7. Redirect to Meraki grant URL         │                      │
+     │ <─────────────────│─────────────────────────────────────────── >│
+     │                   │                     │                      │
+     │ 8. Network access granted               │                      │
+     │ <───────────────────────────────────────────────────────────────│
+```
+
+## Why PKCE?
+
+Even though you're using a **Confidential Client** (which has a client secret), PKCE adds an extra layer of security:
+- Protects against authorization code interception
+- Mitigates man-in-the-middle attacks
+- Recommended by Microsoft for all OAuth flows
+
+
 ## Quick Start
 In order to work with Meraki's captive portal, your server will need to run on a publicly available IP, i.e., you will need to host it out in the Internet. There are several alternatives to address this. For development purposes, you can use ngrok, which will create introspectable tunnels to your localhost. For production environments, you can use Heroku, which is a PAAS that has a free tier of service or Azure Webapp which also have a Free plan.
 * Getting Started on Heroku with Node.js - [Getting started guide](https://devcenter.heroku.com/articles/getting-started-with-nodejs#introduction)
