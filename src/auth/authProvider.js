@@ -121,6 +121,11 @@ class AuthProvider {
                 return next(new Error('Error: response not found'));
             }
 
+            // CSRF protection - validate state matches what we sent
+            if (req.body.state !== req.session.authCodeUrlRequest?.state) {
+                return next(new Error('State mismatch - potential CSRF attack'));
+            }
+
             const authCodeRequest = {
                 ...req.session.authCodeRequest,
                 code: req.body.code,
