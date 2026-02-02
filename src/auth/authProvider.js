@@ -164,18 +164,20 @@ class AuthProvider {
                 if (!state.successRedirect) {
                     return next(new Error('Missing redirect URL in state'));
                 }
-                // Accept https and validate domain suffix
+                // Accept https and validate domain
                 const schema = Joi.string().uri({
-                    scheme: [
-                        /https?/
-                    ]
+                    scheme: [/https?/]
                 }).custom((value, helpers) => {
-                    const url = new URL(value);
-                    if (!url.hostname.endsWith('network-auth.com')) {
+                    const parsedUrl = new URL(value);
+                    const hostname = parsedUrl.hostname;
+                    
+                    // Must be exact match OR a subdomain (with leading dot)
+                    if (hostname !== 'network-auth.com' && 
+                        !hostname.endsWith('.network-auth.com')) {
                         return helpers.error('any.invalid');
                     }
                     return value;
-                }, 'Domain suffix validation');
+                }, 'Domain validation');
                 // Decode Base64 URL
                 const decodedUrl = decodeURIComponent(state.successRedirect);
                 //do the validation against the decoded URL
