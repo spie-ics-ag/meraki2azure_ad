@@ -29,7 +29,7 @@ const favicon = require('serve-favicon');
 const path = require('path');
 const indexRouter = require('./routes/index');
 const authRouter = require('./routes/auth');
-const rateLimit = require("express-rate-limit");
+const rateLimit = require('express-rate-limit');
 
 // initialize express
 const app = express();
@@ -82,9 +82,9 @@ const limiter = rateLimit({
     standardHeaders: 'draft-7', // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
     skipSuccessfulRequests: true, // Do not count successful requests
-    handler: function (req, res, next) {        
-        res.locals.message = "Rate limit exceeded";
-        res.locals.error = "Too many requests, please try again later.";
+    handler: function (req, res, next) {
+        res.locals.message = 'Rate limit exceeded';
+        res.locals.error = 'Too many requests, please try again later.';
         res.locals.status = 429;
         // render the error page
         res.status(res.locals.status);
@@ -98,8 +98,6 @@ app.use(limiter);
 app.use('/', indexRouter);
 app.use('/auth', authRouter);
 
-
-
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
     next(createError(404));
@@ -109,7 +107,7 @@ app.use(function (req, res, next) {
 // eslint-disable-next-line no-unused-vars
 app.use(function (err, req, res, _next) {
     // set locals, only providing error in development
-    res.locals.message = "Unhandled Exception";
+    res.locals.message = 'Unhandled Exception';
     res.locals.error = req.app.get('env') === 'development' ? err.message : {};
     res.locals.status = err.status || 500;
 

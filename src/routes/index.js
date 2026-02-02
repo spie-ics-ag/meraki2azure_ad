@@ -8,7 +8,6 @@ const express = require('express');
 const router = express.Router();
 const url = require('url');
 
-
 // eslint-disable-next-line no-unused-vars
 router.get('/', function (req, res, _next) {
     const url_parts = url.parse(req.url, true);
