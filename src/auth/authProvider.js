@@ -309,14 +309,22 @@ class AuthProvider {
     async getCloudDiscoveryMetadata(authority) {
         const endpoint =
             'https://login.microsoftonline.com/common/discovery/instance';
-        const response = await axios.get(endpoint, {
-            timeout: 10000, // 10 seconds
-            params: {
-                'api-version': '1.1',
-                authorization_endpoint: `${authority}/oauth2/v2.0/authorize`,
-            },
-        });
-        return response.data;
+
+        try {
+            const response = await axios.get(endpoint, {
+                timeout: 10000,
+                params: {
+                    'api-version': '1.1',
+                    authorization_endpoint: `${authority}/oauth2/v2.0/authorize`,
+                },
+            });
+            return response.data;
+        } catch (error) {
+            console.error(
+                `Error fetching cloud discovery metadata: ${error.message}`
+            );
+            throw error;
+        }
     }
 
     /**
@@ -328,11 +336,14 @@ class AuthProvider {
 
         try {
             const response = await axios.get(endpoint, {
-                timeout: 10000, // 10 seconds
+                timeout: 10000,
             });
             return response.data;
         } catch (error) {
-            console.error(`error on getAuthorityMetadata ${error}`);
+            console.error(
+                `Error fetching authority metadata: ${error.message}`
+            );
+            throw error;
         }
     }
 }
