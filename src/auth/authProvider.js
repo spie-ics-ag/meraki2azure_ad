@@ -198,7 +198,7 @@ class AuthProvider {
                     return next(new Error('Invalid URL encoding detected'));
                 }
 
-                 // Accept https and validate domain
+                // Accept https and validate domain
                 const schema = Joi.string()
                     .uri({
                         scheme: [/https?/],
@@ -310,12 +310,13 @@ class AuthProvider {
         const endpoint =
             'https://login.microsoftonline.com/common/discovery/instance';
         const response = await axios.get(endpoint, {
+            timeout: 10000, // 10 seconds
             params: {
                 'api-version': '1.1',
                 authorization_endpoint: `${authority}/oauth2/v2.0/authorize`,
             },
         });
-        return await response.data;
+        return response.data;
     }
 
     /**
@@ -326,8 +327,10 @@ class AuthProvider {
         const endpoint = `${authority}/v2.0/.well-known/openid-configuration`;
 
         try {
-            const response = await axios.get(endpoint);
-            return await response.data;
+            const response = await axios.get(endpoint, {
+                timeout: 10000, // 10 seconds
+            });
+            return response.data;
         } catch (error) {
             console.error(`error on getAuthorityMetadata ${error}`);
         }
