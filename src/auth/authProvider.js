@@ -38,6 +38,17 @@ class AuthProvider {
         return { verifier, challenge };
     }
 
+    isValidRedirectDomain(urlString) {
+        try {
+            const parsedUrl = new URL(urlString);
+            const hostname = parsedUrl.hostname;
+            return hostname === 'network-auth.com' || 
+                hostname.endsWith('.network-auth.com');
+        } catch {
+            return false;
+        }
+    }
+
     login(options = {}) {
         return async (req, res, next) => {
             /**
@@ -46,7 +57,17 @@ class AuthProvider {
              * You can pass the user's state in the app, such as the page or view they were on, as input to this parameter.
              */
 
-            const query = req.query; // Express already parses query params
+            const query = req.query; 
+            
+            // Validate required parameters exist
+            if (!query.base_grant_url || !query.user_continue_url) {
+                return next(new Error('Missing required query parameters'));
+            }
+
+            // Validate base_grant_url domain early
+            if (!this.isValidRedirectDomain(query.base_grant_url)) {
+                return next(new Error('Invalid base_grant_url domain'));
+            }
 
             const state = this.base64Encode(
                 JSON.stringify({
@@ -168,12 +189,7 @@ class AuthProvider {
                 const schema = Joi.string().uri({
                     scheme: [/https?/]
                 }).custom((value, helpers) => {
-                    const parsedUrl = new URL(value);
-                    const hostname = parsedUrl.hostname;
-                    
-                    // Must be exact match OR a subdomain (with leading dot)
-                    if (hostname !== 'network-auth.com' && 
-                        !hostname.endsWith('.network-auth.com')) {
+                    if (!this.isValidRedirectDomain(value)) {
                         return helpers.error('any.invalid');
                     }
                     return value;
