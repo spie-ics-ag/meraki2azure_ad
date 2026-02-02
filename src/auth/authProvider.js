@@ -28,7 +28,7 @@ class AuthProvider {
     async generatePkceCodes() {
         // Generate a random verifier (43-128 characters)
         const verifier = crypto.randomBytes(32).toString('base64url');
-        
+
         // Generate challenge from verifier using SHA256
         const challenge = crypto
             .createHash('sha256')
@@ -42,8 +42,10 @@ class AuthProvider {
         try {
             const parsedUrl = new URL(urlString);
             const hostname = parsedUrl.hostname;
-            return hostname === 'network-auth.com' || 
-                hostname.endsWith('.network-auth.com');
+            return (
+                hostname === 'network-auth.com' ||
+                hostname.endsWith('.network-auth.com')
+            );
         } catch {
             return false;
         }
@@ -57,8 +59,8 @@ class AuthProvider {
              * You can pass the user's state in the app, such as the page or view they were on, as input to this parameter.
              */
 
-            const query = req.query; 
-            
+            const query = req.query;
+
             // Validate required parameters exist
             if (!query.base_grant_url || !query.user_continue_url) {
                 return next(new Error('Missing required query parameters'));
@@ -78,7 +80,7 @@ class AuthProvider {
             const authCodeUrlRequestParams = {
                 state: state,
 
-                 /**
+                /**
                  * By default, MSAL Node will add OIDC scopes to the auth code url request. For more information, visit:
                  * https://docs.microsoft.com/azure/active-directory/develop/v2-permissions-and-consent#openid-connect-scopes
                  */
@@ -144,7 +146,9 @@ class AuthProvider {
 
             // CSRF protection - validate state matches what we sent
             if (req.body.state !== req.session.authCodeUrlRequest?.state) {
-                return next(new Error('State mismatch - potential CSRF attack'));
+                return next(
+                    new Error('State mismatch - potential CSRF attack')
+                );
             }
 
             const authCodeRequest = {
@@ -185,19 +189,29 @@ class AuthProvider {
                 if (!state.successRedirect) {
                     return next(new Error('Missing redirect URL in state'));
                 }
-                // Accept https and validate domain
-                const schema = Joi.string().uri({
-                    scheme: [/https?/]
-                }).custom((value, helpers) => {
-                    if (!this.isValidRedirectDomain(value)) {
-                        return helpers.error('any.invalid');
-                    }
-                    return value;
-                }, 'Domain validation');
-                // Decode Base64 URL
+
+                // Decode URL
                 const decodedUrl = decodeURIComponent(state.successRedirect);
-                //do the validation against the decoded URL
-                const validatedRedirectUrl  = await schema.validateAsync(decodedUrl);
+
+                // Double-encoding protection
+                if (decodedUrl !== decodeURIComponent(decodedUrl)) {
+                    return next(new Error('Invalid URL encoding detected'));
+                }
+
+                 // Accept https and validate domain
+                const schema = Joi.string()
+                    .uri({
+                        scheme: [/https?/],
+                    })
+                    .custom((value, helpers) => {
+                        if (!this.isValidRedirectDomain(value)) {
+                            return helpers.error('any.invalid');
+                        }
+                        return value;
+                    }, 'Domain validation');
+
+                const validatedRedirectUrl =
+                    await schema.validateAsync(decodedUrl);
                 //it's safe to redirect to the provided URL
                 res.redirect(validatedRedirectUrl);
             } catch (error) {
