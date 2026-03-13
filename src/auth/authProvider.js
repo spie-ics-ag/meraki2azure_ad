@@ -6,7 +6,6 @@
 'use strict';
 
 const msal = require('@azure/msal-node');
-const axios = require('axios');
 const crypto = require('crypto');
 const { msalConfig } = require('../authConfig');
 const Joi = require('joi');
@@ -64,6 +63,9 @@ class AuthProvider {
             // Validate required parameters exist
             if (!query.base_grant_url || !query.user_continue_url) {
                 return next(new Error('Missing required query parameters'));
+            }
+            if (!this.isValidRedirectDomain(query.user_continue_url)) {
+                return next(new Error('Invalid user_continue_url domain'));
             }
 
             // Validate base_grant_url domain early
@@ -151,6 +153,13 @@ class AuthProvider {
                 );
             }
 
+            // Validate PKCE codes and auth code request exist in session
+            if (
+                !req.session.pkceCodes?.verifier ||
+                !req.session.authCodeRequest
+            ) {
+                return next(new Error('Session expired. Please login again.'));
+            }
             const authCodeRequest = {
                 ...req.session.authCodeRequest,
                 code: req.body.code,
@@ -178,6 +187,11 @@ class AuthProvider {
                 req.session.account = tokenResponse.account;
                 req.session.isAuthenticated = true;
 
+                // Clear PKCE codes and auth code request - single use only
+                delete req.session.pkceCodes;
+                delete req.session.authCodeRequest;
+                delete req.session.authCodeUrlRequest;
+
                 // Parse state with error handling
                 let state;
                 try {
@@ -193,11 +207,6 @@ class AuthProvider {
                 // Decode URL
                 const decodedUrl = decodeURIComponent(state.successRedirect);
 
-                // Double-encoding protection
-                if (decodedUrl !== decodeURIComponent(decodedUrl)) {
-                    return next(new Error('Invalid URL encoding detected'));
-                }
-
                 // Accept https and validate domain
                 const schema = Joi.string()
                     .uri({
@@ -212,6 +221,10 @@ class AuthProvider {
 
                 const validatedRedirectUrl =
                     await schema.validateAsync(decodedUrl);
+                // Save session only after full validation
+                await new Promise((resolve, reject) =>
+                    req.session.save((err) => (err ? reject(err) : resolve()))
+                );
                 //it's safe to redirect to the provided URL
                 res.redirect(validatedRedirectUrl);
             } catch (error) {
@@ -234,7 +247,8 @@ class AuthProvider {
                 logoutUri += `logout?post_logout_redirect_uri=${options.postLogoutRedirectUri}`;
             }
 
-            req.session.destroy(() => {
+            req.session.destroy((err) => {
+                if (err) console.error('Session destroy error:', err);
                 res.redirect(logoutUri);
             });
         };
@@ -281,7 +295,7 @@ class AuthProvider {
              **/
             req.session.authCodeUrlRequest = {
                 ...authCodeUrlRequestParams,
-                responseMode: msal.ResponseMode.FORM_POST, // recommended for confidential clients
+                responseMode: 'form_post', // recommended for confidential clients
                 codeChallenge: req.session.pkceCodes.challenge,
                 codeChallengeMethod: req.session.pkceCodes.challengeMethod,
             };
@@ -292,6 +306,11 @@ class AuthProvider {
             };
 
             try {
+                // Ensure session is saved before redirecting to auth code url to prevent race conditions
+                await new Promise((resolve, reject) =>
+                    req.session.save((err) => (err ? reject(err) : resolve()))
+                );
+
                 const authCodeUrlResponse = await msalInstance.getAuthCodeUrl(
                     req.session.authCodeUrlRequest
                 );
@@ -307,24 +326,20 @@ class AuthProvider {
      * @returns
      */
     async getCloudDiscoveryMetadata(authority) {
-        const endpoint =
-            'https://login.microsoftonline.com/common/discovery/instance';
-
-        try {
-            const response = await axios.get(endpoint, {
-                timeout: 10000,
-                params: {
-                    'api-version': '1.1',
-                    authorization_endpoint: `${authority}/oauth2/v2.0/authorize`,
-                },
-            });
-            return response.data;
-        } catch (error) {
-            console.error(
-                `Error fetching cloud discovery metadata: ${error.message}`
-            );
-            throw error;
-        }
+        const endpoint = new URL(
+            'https://login.microsoftonline.com/common/discovery/instance'
+        );
+        endpoint.searchParams.set('api-version', '1.1');
+        endpoint.searchParams.set(
+            'authorization_endpoint',
+            `${authority}/oauth2/v2.0/authorize`
+        );
+        const res = await fetch(endpoint.toString(), {
+            signal: AbortSignal.timeout(10000),
+        });
+        if (!res.ok)
+            throw new Error(`Discovery metadata fetch failed: ${res.status}`);
+        return res.json();
     }
 
     /**
@@ -332,19 +347,13 @@ class AuthProvider {
      * @returns
      */
     async getAuthorityMetadata(authority) {
-        const endpoint = `${authority}/v2.0/.well-known/openid-configuration`;
-
-        try {
-            const response = await axios.get(endpoint, {
-                timeout: 10000,
-            });
-            return response.data;
-        } catch (error) {
-            console.error(
-                `Error fetching authority metadata: ${error.message}`
-            );
-            throw error;
-        }
+        const res = await fetch(
+            `${authority}/v2.0/.well-known/openid-configuration`,
+            { signal: AbortSignal.timeout(10000) }
+        );
+        if (!res.ok)
+            throw new Error(`Authority metadata fetch failed: ${res.status}`);
+        return res.json();
     }
 }
 
