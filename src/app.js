@@ -18,36 +18,43 @@
 
 require('dotenv').config();
 
+if (!process.env.SESSION_SECRET) {
+    throw new Error('SESSION_SECRET environment variable is required');
+}
+
 const express = require('express');
 const expressSession = require('express-session');
 const helmet = require('helmet');
-const bodyParser = require('body-parser');
 const createError = require('http-errors');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const favicon = require('serve-favicon');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 const indexRouter = require('./routes/index');
 const authRouter = require('./routes/auth');
-const rateLimit = require('express-rate-limit');
 
-// initialize express
 const app = express();
 
-/**
- * Using express-session middleware for persistent user session. Be sure to
- * familiarize yourself with available options. Visit: https://www.npmjs.com/package/express-session
- */
+app.use(helmet());
+app.use(morgan('tiny'));
+
+// Trust proxy in production (required if behind nginx/load balancer)
+if (process.env.NODE_ENV === 'production') {
+    // Trust first proxy to get correct protocol for secure cookies
+    app.set('trust proxy', 1);
+}
+
 app.use(
     expressSession({
         secret: process.env.SESSION_SECRET,
         resave: false,
         saveUninitialized: false,
         cookie: {
-            httpOnly: true,
-            secure: app.get('env') === 'production', // set this to true on production
-            sameSite: false,
-            maxAge: 60000, // expires after 1 min
+            httpOnly: true, // prevent client-side JS access to cookies
+            secure: process.env.NODE_ENV === 'production', // secure cookies in production
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for production to allow cross-site cookies, 'lax' for development
+            maxAge: 5 * 60 * 1000, //5 minutes session expiration to reduce risk of stale sessions
         },
     })
 );
@@ -64,25 +71,15 @@ app.use(
         path.join(__dirname, process.env.PUBLIC_DIR_PATH || 'public')
     )
 );
-console.log(
-    `public path:  ${path.join(
-        __dirname,
-        process.env.PUBLIC_DIR_PATH || 'public'
-    )}`
-);
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-app.use(helmet());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(morgan('tiny'));
-
 // Rate limiter middleware
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // limit each IP/user to 100 requests per windowMs
-    standardHeaders: 'draft-7', // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
+    standardHeaders: 'draft-7',
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
     skipSuccessfulRequests: true, // Do not count successful requests
-    handler: function (req, res, next) {
+    handler: function (req, res) {
         res.locals.message = 'Rate limit exceeded';
         res.locals.error = 'Too many requests, please try again later.';
         res.locals.status = 429;
@@ -106,11 +103,9 @@ app.use(function (req, res, next) {
 // error handler
 // eslint-disable-next-line no-unused-vars
 app.use(function (err, req, res, _next) {
-    // set locals, only providing error in development
     res.locals.message = 'Unhandled Exception';
     res.locals.error = req.app.get('env') === 'development' ? err.message : {};
     res.locals.status = err.status || 500;
-
     // render the error page
     res.status(res.locals.status);
     res.render('error');
