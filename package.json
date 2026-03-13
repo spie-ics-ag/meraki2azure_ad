@@ -13,8 +13,6 @@
     },
     "dependencies": {
         "@azure/msal-node": "^5.0.6",
-        "axios": "^1.13.6",
-        "cookie": "^1.1.1",
         "cookie-parser": "^1.4.7",
         "debug": "~4.4.3",
         "dotenv": "^17.3.1",
@@ -26,12 +24,14 @@
         "http-errors": "~2.0.0",
         "joi": "^18.0.2",
         "morgan": "~1.10.1",
-        "pkce-challenge": "^6.0.0",
         "serve-favicon": "^2.5.1"
     },
     "devDependencies": {
+        "@eslint/eslintrc": "^3.3.5",
+        "@eslint/js": "^9.39.4",
         "eslint": "^10.0.2",
         "eslint-config-prettier": "^10.1.8",
+        "globals": "^17.4.0",
         "nodemon": "^3.1.14",
         "prettier": "^3.8.1"
     },
