@@ -6,12 +6,9 @@
 
 const express = require('express');
 const router = express.Router();
-const url = require('url');
 
-// eslint-disable-next-line no-unused-vars
 router.get('/', function (req, res, _next) {
-    const url_parts = url.parse(req.url, true);
-    const query = url_parts.query;
+    const { base_grant_url, user_continue_url } = req.query;
     const title =
         process.env.PORTAL_TITLE ||
         'Meraki Captive Portal for Azure Active Directory';
@@ -20,8 +17,8 @@ router.get('/', function (req, res, _next) {
         title,
         isAuthenticated: req.session.isAuthenticated,
         username: req.session.account?.username,
-        base_grant_url: query.base_grant_url,
-        user_continue_url: query.user_continue_url || process.env.REDIRECT_URL,
+        base_grant_url,
+        user_continue_url: user_continue_url || process.env.REDIRECT_URL,
         isDevelopment: process.env.NODE_ENV === 'development',
         ssid: process.env.SSID || 'WiFi',
     });
