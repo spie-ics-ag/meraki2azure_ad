@@ -20,7 +20,11 @@ router.get(
     })
 );
 
-router.post('/openid/return', authProvider.handleRedirect());
+router.post(
+    '/openid/return',
+    express.urlencoded({ extended: false, limit: '10kb' }), // body size limit to prevent large payload attacks
+    authProvider.handleRedirect()
+);
 
 router.get(
     '/signout',
