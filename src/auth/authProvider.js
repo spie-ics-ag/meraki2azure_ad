@@ -149,11 +149,25 @@ class AuthProvider {
     // eslint-disable-next-line no-unused-vars
     handleRedirect(_options = {}) {
         return async (req, res, next) => {
-
             // Temporary debug - remove after fix
             console.log('Callback session ID:', req.sessionID);
             console.log('Callback pkceCodes:', !!req.session.pkceCodes);
-            console.log('Callback authCodeRequest:', !!req.session.authCodeRequest);
+            console.log(
+                'Callback authCodeRequest:',
+                !!req.session.authCodeRequest
+            );
+            console.log(
+                'Callback session state:',
+                req.session.authCodeUrlRequest?.state
+            );
+            console.log(
+                'Callback body state:',
+                req.body.state ? 'present' : 'missing'
+            );
+            console.log(
+                'Callback state match:',
+                req.body.state === req.session.authCodeUrlRequest?.state
+            );
 
             if (!req.body || !req.body.state) {
                 return next(new Error('Error: response not found'));
