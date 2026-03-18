@@ -37,7 +37,7 @@ class AuthProvider {
         return { verifier, challenge };
     }
 
-    isValidRedirectDomain(urlString) {
+    isMerakiGrantUrl(urlString) {
         try {
             const parsedUrl = new URL(urlString);
             const hostname = parsedUrl.hostname;
@@ -64,13 +64,20 @@ class AuthProvider {
             if (!query.base_grant_url || !query.user_continue_url) {
                 return next(new Error('Missing required query parameters'));
             }
-            if (!this.isValidRedirectDomain(query.user_continue_url)) {
-                return next(new Error('Invalid user_continue_url domain'));
+
+            // base_grant_url must be network-auth.com (Meraki's domain)
+            if (!this.isMerakiGrantUrl(query.base_grant_url)) {
+                return next(new Error('Invalid base_grant_url domain'));
             }
 
-            // Validate base_grant_url domain early
-            if (!this.isValidRedirectDomain(query.base_grant_url)) {
-                return next(new Error('Invalid base_grant_url domain'));
+            // user_continue_url just needs to be valid HTTPS
+            try {
+                const continueUrl = new URL(query.user_continue_url);
+                if (continueUrl.protocol !== 'https:') {
+                    return next(new Error('user_continue_url must use HTTPS'));
+                }
+            } catch {
+                return next(new Error('Invalid user_continue_url'));
             }
 
             const state = this.base64Encode(
@@ -207,13 +214,13 @@ class AuthProvider {
                 // Decode URL
                 const decodedUrl = decodeURIComponent(state.successRedirect);
 
-                // Accept https and validate domain
+                // validates the final redirect (built from base_grant_url) is a valid URL and belongs to Meraki domain to prevent open redirect vulnerabilities
                 const schema = Joi.string()
                     .uri({
                         scheme: [/https?/],
                     })
                     .custom((value, helpers) => {
-                        if (!this.isValidRedirectDomain(value)) {
+                        if (!this.isMerakiGrantUrl(value)) {
                             return helpers.error('any.invalid');
                         }
                         return value;
