@@ -149,6 +149,12 @@ class AuthProvider {
     // eslint-disable-next-line no-unused-vars
     handleRedirect(_options = {}) {
         return async (req, res, next) => {
+
+            // Temporary debug - remove after fix
+            console.log('Callback session ID:', req.sessionID);
+            console.log('Callback pkceCodes:', !!req.session.pkceCodes);
+            console.log('Callback authCodeRequest:', !!req.session.authCodeRequest);
+
             if (!req.body || !req.body.state) {
                 return next(new Error('Error: response not found'));
             }
@@ -232,6 +238,14 @@ class AuthProvider {
                 await new Promise((resolve, reject) =>
                     req.session.save((err) => (err ? reject(err) : resolve()))
                 );
+
+                // Temporary debug - remove after fix
+                console.log(
+                    'Session saved, pkceCodes:',
+                    !!req.session.pkceCodes
+                );
+                console.log('Session ID:', req.sessionID);
+
                 //it's safe to redirect to the provided URL
                 res.redirect(validatedRedirectUrl);
             } catch (error) {
