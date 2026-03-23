@@ -31,6 +31,8 @@ const morgan = require('morgan');
 const favicon = require('serve-favicon');
 const path = require('path');
 const rateLimit = require('express-rate-limit');
+const FileStore = require('session-file-store')(expressSession);
+const fs = require('fs');
 const indexRouter = require('./routes/index');
 const authRouter = require('./routes/auth');
 
@@ -45,19 +47,32 @@ if (process.env.NODE_ENV === 'production') {
     app.set('trust proxy', 1);
 }
 
-app.use(
-    expressSession({
-        secret: process.env.SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-            httpOnly: true, // prevent client-side JS access to cookies
-            secure: process.env.NODE_ENV === 'production', // secure cookies in production
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for production to allow cross-site cookies, 'lax' for development
-            maxAge: 5 * 60 * 1000, //5 minutes session expiration to reduce risk of stale sessions
-        },
-    })
-);
+const sessionDir = process.env.NODE_ENV === 'production' 
+    ? '/home/sessions' 
+    : path.join(__dirname, '.sessions');
+
+
+if (!fs.existsSync(sessionDir)) {
+    fs.mkdirSync(sessionDir, { recursive: true });
+}
+
+app.use(expressSession({
+    store: new FileStore({
+        path: sessionDir,
+        ttl: 300,
+        retries: 1,
+        reapInterval: 300, // clean up expired files every 5 minutes
+    }),
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        maxAge: 5 * 60 * 1000,
+    },
+}));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
