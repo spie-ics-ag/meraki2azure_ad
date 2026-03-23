@@ -253,14 +253,11 @@ class AuthProvider {
                     req.session.save((err) => (err ? reject(err) : resolve()))
                 );
 
-                // Temporary debug
-                console.log('Login session ID:', req.sessionID);
-                console.log('Login pkceCodes saved:', !!req.session.pkceCodes);
-                console.log('Login session file path:', sessionDir);
-
                 //it's safe to redirect to the provided URL
                 res.redirect(validatedRedirectUrl);
+                // In handleRedirect catch block:
             } catch (error) {
+                console.error('handleRedirect error:', error.message);
                 next(error);
             }
         };
@@ -344,11 +341,16 @@ class AuthProvider {
                     req.session.save((err) => (err ? reject(err) : resolve()))
                 );
 
+                // Temporary debug
+                console.log('Login session ID:', req.sessionID);
+                console.log('Login pkceCodes saved:', !!req.session.pkceCodes);
+
                 const authCodeUrlResponse = await msalInstance.getAuthCodeUrl(
                     req.session.authCodeUrlRequest
                 );
                 res.redirect(authCodeUrlResponse);
             } catch (error) {
+                console.error('redirectToAuthCodeUrl error:', error.message);
                 next(error);
             }
         };
