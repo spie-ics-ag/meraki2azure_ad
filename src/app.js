@@ -127,4 +127,6 @@ app.use(function (err, req, res, _next) {
 });
 
 console.log('Meraki captive portal for AZURE AD started');
+console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`Session store path: ${sessionDir}`);
 module.exports = app;

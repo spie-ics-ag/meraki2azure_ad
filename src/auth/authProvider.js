@@ -253,12 +253,10 @@ class AuthProvider {
                     req.session.save((err) => (err ? reject(err) : resolve()))
                 );
 
-                // Temporary debug - remove after fix
-                console.log(
-                    'Session saved, pkceCodes:',
-                    !!req.session.pkceCodes
-                );
-                console.log('Session ID:', req.sessionID);
+                // Temporary debug
+                console.log('Login session ID:', req.sessionID);
+                console.log('Login pkceCodes saved:', !!req.session.pkceCodes);
+                console.log('Login session file path:', sessionDir);
 
                 //it's safe to redirect to the provided URL
                 res.redirect(validatedRedirectUrl);
