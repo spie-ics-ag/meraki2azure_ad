@@ -60,9 +60,9 @@ app.use(
     expressSession({
         store: new FileStore({
             path: sessionDir,
-            ttl: 300,
+            ttl: 900,  // session valid 15 minutes
             retries: 1,
-            reapInterval: 300, // clean up expired files every 5 minutes
+            reapInterval: 3600, // clean up expired files once per hour
         }),
         secret: process.env.SESSION_SECRET,
         resave: false,
@@ -71,7 +71,7 @@ app.use(
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-            maxAge: 5 * 60 * 1000,
+            maxAge: 15 * 60 * 1000, // 15 min - matches ttl
         },
     })
 );
