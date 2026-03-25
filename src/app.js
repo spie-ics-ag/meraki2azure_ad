@@ -47,6 +47,9 @@ if (process.env.NODE_ENV === 'production') {
     app.set('trust proxy', 1);
 }
 
+const SESSION_TTL = parseInt(process.env.SESSION_TTL) || 900; // 15 minutes default
+const SESSION_REAP_INTERVAL = SESSION_TTL * 4; // clean up every 4x TTL (1 hour default)
+
 const sessionDir =
     process.env.NODE_ENV === 'production'
         ? '/home/sessions'
@@ -60,9 +63,9 @@ app.use(
     expressSession({
         store: new FileStore({
             path: sessionDir,
-            ttl: 900,  // session valid 15 minutes
+            ttl: SESSION_TTL, 
             retries: 1,
-            reapInterval: 3600, // clean up expired files once per hour
+            reapInterval: SESSION_REAP_INTERVAL,  // clean up every 4x TTL 
         }),
         secret: process.env.SESSION_SECRET,
         resave: false,
@@ -71,7 +74,7 @@ app.use(
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-            maxAge: 15 * 60 * 1000, // 15 min - matches ttl
+            maxAge: SESSION_TTL * 1000, // convert to ms for cookie
         },
     })
 );
@@ -131,4 +134,5 @@ app.use(function (err, req, res, _next) {
 console.log('Meraki captive portal for AZURE AD started');
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
 console.log(`Session store path: ${sessionDir}`);
+console.log(`Session TTL: ${SESSION_TTL}s`);
 module.exports = app;
