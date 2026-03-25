@@ -32,16 +32,19 @@ This application and the step by step below were created / cloned based on the c
      │                   │ 2. Generate PKCE    │                      │
      │                   │    (verifier +      │                      │
      │                   │     challenge)      │                      │
+     │                   │    Save to session  │                      │
      │                   │                     │                      │
-     │ 3. Redirect to Azure AD                 │                      │
-     │ <─────────────────│────────────────────>│                      │
+     │ 3. Redirect browser to Azure AD login   │                      │
+     │ <─────────────────│                     │                      │
      │                   │                     │                      │
-     │ 4. User authenticates                   │                      │
+     │ 4. User authenticates at Azure AD       │                      │
      │ ───────────────────────────────────────>│                      │
      │                   │                     │                      │
-     │ 5. Auth code (POST)                     │                      │
-     │ <───────────────────────────────────────│                      │
-     │ ─────────────────>│                     │                      │
+     │                   │ 5. Azure AD POSTs   │                      │
+     │                   │    auth code to     │                      │
+     │                   │    /auth/openid/    │                      │
+     │                   │    return (FORM_POST)│                     │
+     │                   │<────────────────────│                      │
      │                   │                     │                      │
      │                   │ 6. Exchange code    │                      │
      │                   │    + verifier       │                      │
@@ -49,8 +52,9 @@ This application and the step by step below were created / cloned based on the c
      │                   │ ───────────────────>│                      │
      │                   │ <───────────────────│                      │
      │                   │                     │                      │
-     │ 7. Redirect to Meraki grant URL         │                      │
-     │ <─────────────────│────────────────────────────────────────── >│
+     │ 7. Redirect browser to Meraki grant URL │                      │
+     │ <─────────────────│                     │                      │
+     │ ──────────────────────────────────────────────────────────────>│
      │                   │                     │                      │
      │ 8. Network access granted               │                      │
      │ <──────────────────────────────────────────────────────────────│
