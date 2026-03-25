@@ -18,48 +18,53 @@
 
 name: Snyk Security
 
+# Trigger on push/PR to main and dev branches, or manually
 on:
   push:
-    branches: ["main", "dev" ]
+    branches: ["main", "dev"]
   pull_request:
     branches: ["main", "dev"]
   workflow_dispatch:
 
+# Minimal default permissions
 permissions:
   contents: read
 
 jobs:
   snyk:
     permissions:
-      contents: read # for actions/checkout to fetch code
-      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
-      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+      contents: read           # required for actions/checkout to fetch code
+      security-events: write   # required for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read            # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
     runs-on: ubuntu-latest
     steps:
+      # Checkout the repository
       - uses: actions/checkout@v4
-      - name: Set up Snyk CLI to check for security issues
-        # Snyk can be used to break the build when it detects security issues.
-        # In this case we want to upload the SAST issues to GitHub Code Scanning
-        uses: snyk/actions/setup@master
 
-        # For Snyk Open Source you must first set up the development environment for your application's dependencies
-        # For example for Node
+      # Set up Node.js - must match the application's required version
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
-        env:
-          # This is where you will need to introduce the Snyk API token created with your Snyk account
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-          
+          node-version: 20
+
+      # Install Snyk CLI
+      # More details: https://github.com/snyk/actions#getting-your-snyk-token
+      # Sign up for free at https://snyk.io/login
+      - name: Set up Snyk CLI
+        uses: snyk/actions/setup@v1
+
+      # Run Snyk to check for vulnerabilities
+      # continue-on-error ensures SARIF upload runs even if vulnerabilities are found
+      # For more examples, including how to limit scans to only high-severity issues
+      # and fail PR checks, see https://github.com/snyk/actions/
       - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@master
-        continue-on-error: true # To make sure that SARIF upload gets called
+        uses: snyk/actions/node@v1
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --sarif-file-output=snyk.sarif
 
-        # Push the Snyk Code results into GitHub Code Scanning tab
+      # Upload Snyk results to GitHub Security Code Scanning tab
       - name: Upload result to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v3
         with:
