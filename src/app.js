@@ -63,9 +63,9 @@ app.use(
     expressSession({
         store: new FileStore({
             path: sessionDir,
-            ttl: SESSION_TTL, 
+            ttl: SESSION_TTL,
             retries: 1,
-            reapInterval: SESSION_REAP_INTERVAL,  // clean up every 4x TTL 
+            reapInterval: SESSION_REAP_INTERVAL, // clean up every 4x TTL
         }),
         secret: process.env.SESSION_SECRET,
         resave: false,
