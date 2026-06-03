@@ -23,7 +23,7 @@
         "helmet": "^8.2.0",
         "http-errors": "~2.0.0",
         "joi": "^18.2.1",
-        "morgan": "~1.10.1",
+        "morgan": "~1.11.0",
         "serve-favicon": "^2.5.1",
         "session-file-store": "^1.5.0"
     },
