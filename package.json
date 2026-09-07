@@ -28,7 +28,7 @@
         "session-file-store": "^1.5.0"
     },
     "devDependencies": {
-        "@eslint/eslintrc": "^3.3.6",
+        "@eslint/eslintrc": "^3.3.7",
         "@eslint/js": "^10.0.1",
         "eslint": "^10.9.1",
         "eslint-config-prettier": "^10.1.8",
