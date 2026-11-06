@@ -1,6 +1,9 @@
+[![Dependabot Updates](https://github.com/spie-ics-ag/meraki2azure_ad/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/spie-ics-ag/meraki2azure_ad/actions/workflows/dependabot/dependabot-updates)
+
 # Meraki Captive Portal with Azure Active Directory
 
 This Node.js app was created to facilitate the authorization of users registered on an Azure Active Directory with Meraki wireless infrastructures. Instead of using a RADIUS server for the authentication, you can spin up a web server that will be serving as your Captive Portal, which will then authenticate the user using OAuth.
+
 
 ## References
 
