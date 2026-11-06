@@ -38,7 +38,6 @@
     },
     "overrides": {
         "brace-expansion": "^2.1.7",
-        "minimatch": "^11.0.1",
-        "joi": "^18.2.9"
+        "minimatch": "^11.0.1"
     }    
 }
